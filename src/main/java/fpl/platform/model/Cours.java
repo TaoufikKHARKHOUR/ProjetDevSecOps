@@ -8,76 +8,35 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
-
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
-@JsonIgnoreProperties({"inscriptions", "hibernateLazyInitializer", "handler"})
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "cours")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Cours {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String titre;
-    
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String contenu;
 
-    @ManyToOne
-    @JoinColumn(name = "enseignant_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "enseignant_id", nullable = false)
+    @JsonIgnoreProperties({"password", "hibernateLazyInitializer", "handler"})
     private User enseignant;
-    
-    @OneToMany(mappedBy = "cours", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
+
+    @OneToMany(mappedBy = "cours", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Inscription> inscriptions;
-
-    public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getTitre() {
-		return titre;
-	}
-
-	public void setTitre(String titre) {
-		this.titre = titre;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public List<Inscription> getInscriptions() {
-		return inscriptions;
-	}
-
-	public void setInscriptions(List<Inscription> inscriptions) {
-		this.inscriptions = inscriptions;
-	}
-
-	public String getContenu() {
-		return contenu;
-	}
-
-	public void setContenu(String contenu) {
-		this.contenu = contenu;
-	}
-
-	public User getEnseignant() {
-		return enseignant;
-	}
-
-	public void setEnseignant(User enseignant) {
-		this.enseignant = enseignant;
-	}
-
 }

@@ -32,7 +32,6 @@ jobs:
           project: "FPLAcademy"
           path: "."
           format: "HTML"
-          out: "reports"
           args: >
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
 

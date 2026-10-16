@@ -27,18 +27,14 @@ jobs:
           cache: maven
 
       - name: Run OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@1.1.0
-        with:
-          project: "FPLAcademy"
-          path: "."
-          format: "HTML"
-          args: >
-            --nvdApiKey ${{ secrets.NVD_API_KEY }}
+        run: |
+          chmod +x mvnw
+          ./mvnw org.owasp:dependency-check-maven:12.2.2:check
 
       - name: Upload Dependency-Check report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
-          path: reports/
+          path: target/dependency-check-report.html
           if-no-files-found: warn

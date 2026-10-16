@@ -4,6 +4,13 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "thursday"
+      time: "19:00"
+      timezone: "Africa/Casablanca"
+    open-pull-requests-limit: 5
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
 
   - package-ecosystem: "github-actions"
     directory: "/"

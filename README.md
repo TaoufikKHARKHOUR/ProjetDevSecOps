@@ -1,138 +1,127 @@
-# Platform FPL
+# Workshop 2 — Dependabot & OWASP Dependency-Check
 
-A Spring Boot web application for managing a course platform with teacher and student roles. The application provides authentication, registration, course publication, student enrollment, and dashboards for each role.
+**Groupe 4 : Azzeddine Salmoun , Wail Chairi Mahjor et Toufik Kharkhor**  
+**Projet analysé :** FPLAcademy — application Maven / Spring Boot  
+**Branche de travail :** `workshop2/dependency-security`
 
-## Project overview
+## 1. Objectif
 
-This project is built with:
+Ce workshop a pour objectif de sécuriser les dépendances d’un projet Maven et d’intégrer les contrôles dans un processus CI/CD.
 
-- Java 17
-- Spring Boot 4.0.2
-- Spring Security
-- Spring Data JPA
-- MySQL
-- JSP / JSTL views
-- Maven
-- WAR packaging
+- **OWASP Dependency-Check** analyse les dépendances et recherche les vulnérabilités connues.
+- **Dependabot Version Updates** propose des mises à jour de versions sous forme de pull requests.
+- **Dependabot Alerts** signale les dépendances associées à des vulnérabilités connues.
+- **Dependabot Security Updates** peut proposer des pull requests de correction lorsqu’un correctif est disponible.
+- **GitHub Actions** automatise l’analyse des dépendances dans le workflow CI.
 
-The application exposes a web interface under `src/main/webapp/WEB-INF/jsp` and uses MySQL as its data source.
+## 2. Configuration OWASP Dependency-Check
 
-## Features
-
-- User registration and login
-- Role-based access for teachers and students
-- Course catalog management
-- Course publication and detail pages
-- Student enrollment flow
-- Teacher dashboard with student/course information
-- Access control and restricted pages
-
-## Project structure
-
-```text
-platformFPL/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── fpl/platform/
-│   │   │       ├── config/
-│   │   │       ├── controller/
-│   │   │       ├── dto/
-│   │   │       ├── model/
-│   │   │       ├── repository/
-│   │   │       └── service/
-│   │   ├── resources/
-│   │   │   ├── application.properties
-│   │   │   ├── static/
-│   │   │   └── templates/
-│   │   └── webapp/
-│   │       └── WEB-INF/
-│   │           └── jsp/
-│   └── test/
-│       └── java/
-├── pom.xml
-├── mvnw
-├── mvnw.cmd
-└── README.md
-```
-
-## Prerequisites
-
-Before running the project, make sure you have:
-
-- Java 17+
-- Maven 3.9+
-- MySQL installed and running
-- A database named `cours_platform`
-
-## Configuration
-
-The project configuration is defined in `src/main/resources/application.properties`.
-
-Default values:
-
-```properties
-spring.application.name=platform
-spring.mvc.view.prefix=/WEB-INF/jsp/
-spring.mvc.view.suffix=.jsp
-
-spring.datasource.url=jdbc:mysql://localhost:3306/cours_platform
-spring.datasource.username=root
-spring.datasource.password=mysql
-spring.jpa.hibernate.ddl-auto=update
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-
-server.port=8084
-```
-
-If your MySQL credentials differ, update the datasource section accordingly.
-
-## Run the application
-
-From the project root:
-
-```bash
-./mvnw clean install
-./mvnw spring-boot:run
-```
-
-On Windows:
+Le plugin Maven `org.owasp:dependency-check-maven:12.2.2` a été ajouté dans `pom.xml`. Le scan local a été exécuté avec le Maven Wrapper :
 
 ```powershell
-mvnw.cmd clean install
-mvnw.cmd spring-boot:run
+.\mvnw.cmd org.owasp:dependency-check-maven:12.2.2:check
 ```
 
-Then open:
+Le rapport HTML a été généré à l’emplacement :
 
 ```text
-http://localhost:8084/
+target/dependency-check-report.html
 ```
 
-## Database notes
+### Résultats du scan local
 
-The application uses JPA and will automatically create or update tables based on the entity model (`ddl-auto=update`). Ensure the database exists before starting the application.
+| Indicateur | Résultat |
+|---|---:|
+| Dépendances analysées | 94 (52 uniques) |
+| Dépendances vulnérables | 11 |
+| Vulnérabilités détectées | 155 |
+| Vulnérabilités supprimées | 0 |
+| Version Dependency-Check | 12.2.2 |
+| Résultat Maven local | `BUILD SUCCESS` |
 
-## Main entry point
+Les composants signalés dans le résumé comprennent notamment des bibliothèques Spring, Spring Security, Tomcat et Jackson. Les résultats doivent être examinés avant de décider quelles versions mettre à jour ; les comptes affichés par l’outil ne suffisent pas à conclure qu’une vulnérabilité est exploitable dans tous les contextes.
 
-```java
-fpl.platform.PlatformApplication
+### Captures du scan
+
+<img width="771" height="519" alt="01-rapport-dependency-check" src="https://github.com/user-attachments/assets/d77aa951-f821-461c-bbe5-eaba9b3dd25e" />
+
+*Figure 1 — Informations du scan local et statistiques globales.*
+
+<img width="1864" height="804" alt="02-resume-dependances-vulnerables" src="https://github.com/user-attachments/assets/6dbad642-ef74-46fc-9170-7279defdf4a8" />
+
+
+*Figure 2 — Extrait du résumé des dépendances vulnérables et de leurs niveaux de sévérité.*
+
+## 3. Configuration de Dependabot
+
+Le fichier `.github/dependabot.yml` configure les vérifications périodiques des dépendances Maven et des actions GitHub. La configuration utilisée pour le projet est la suivante :
+
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+      time: "19:00"
+      timezone: "Africa/Casablanca"
+    open-pull-requests-limit: 5
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
-## Typical user flow
+Cette configuration permet à Dependabot de vérifier les mises à jour Maven et GitHub Actions. Les propositions sont soumises sous forme de pull requests pour permettre une revue avant fusion.
 
-1. User accesses the login page.
-2. User registers or logs in.
-3. Role is checked to redirect to the correct dashboard.
-4. Teachers can publish and manage courses.
-5. Students can browse the catalog and enroll in courses.
+### Alertes de sécurité
 
-## Notes
+Dans les paramètres de sécurité du dépôt GitHub, les sections **Dependabot alerts** et **Dependabot security updates** affichaient un bouton **Disable**, indiquant que ces fonctionnalités étaient activées au moment de la vérification.
 
-- The app is configured for JSP-based pages rather than a REST-only API.
-- Security is enabled and access control is enforced through controllers and Spring Security configuration.
-- The project includes both Java controllers and a `rest` package for API-style endpoints.
+<img width="1138" height="504" alt="03-dependabot-alerts-security-updates" src="https://github.com/user-attachments/assets/faca9102-34e7-4e90-9eb6-6015a8ee5365" />
 
-## License
 
-This project does not currently declare a specific license in the Maven configuration.
+*Figure 3 — Paramètres de sécurité Dependabot.*
+
+## 4. Pull requests générées automatiquement
+
+Dependabot a généré plusieurs pull requests de mise à jour, portant notamment sur Maven, OWASP Dependency-Check, Spring Boot et des actions GitHub. Cela confirme que les mises à jour de versions sont prises en compte.
+
+Les pull requests doivent être examinées individuellement. Elles ne doivent pas être fusionnées automatiquement : il faut vérifier les changements, la compatibilité avec le projet et le résultat des contrôles CI.
+
+<img width="668" height="439" alt="04-pull-requests-dependabot" src="https://github.com/user-attachments/assets/e075fc07-e1f0-4d3d-87e6-44805d11be77" />
+
+
+*Figure 4 — Exemples de pull requests proposées par Dependabot.*
+
+## 5. Intégration CI/CD avec GitHub Actions
+
+Le workflow se trouve dans :
+
+```text
+.github/workflows/dependency-check.yml
+```
+
+Il est configuré pour se déclencher lors d’un push, d’une pull request ciblant les branches concernées, ou manuellement. Il récupère le dépôt, configure Java, exécute le Maven Wrapper et tente de publier le rapport HTML comme artefact GitHub Actions.
+
+Commande d’analyse exécutée dans le workflow :
+
+```bash
+./mvnw org.owasp:dependency-check-maven:12.2.2:check
+```
+
+### Preuve d’exécution à compléter
+
+<img width="578" height="353" alt="image" src="https://github.com/user-attachments/assets/5749477b-ae63-4eb4-8690-3edb1316d0bf" />
+
+
+
+## 6. Conclusion
+
+Ce workshop a permis de mettre en place une analyse des dépendances avec OWASP Dependency-Check, la surveillance des mises à jour avec Dependabot et un workflow GitHub Actions pour automatiser l’analyse. Le scan local a détecté 11 dépendances vulnérables et 155 vulnérabilités parmi 94 dépendances analysées. Dependabot a proposé des mises à jour sous forme de pull requests.
+

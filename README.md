@@ -117,6 +117,7 @@ Commande d’analyse exécutée dans le workflow :
 
 ### Preuve d’exécution à compléter
 
+<img width="578" height="353" alt="image" src="https://github.com/user-attachments/assets/5749477b-ae63-4eb4-8690-3edb1316d0bf" />
 
 
 

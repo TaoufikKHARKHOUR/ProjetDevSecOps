@@ -1,6 +1,6 @@
-# Workshop 2 — Dependabot & OWASP Dependency-Check
+# Workshop 3 — Dependabot & OWASP Dependency-Check
 
-**Groupe 4 : Azzeddine Salmoun , Wail Chairi Mahjor et Toufik Kharkhor**  
+**Groupe 5 : Azzeddine Salmoun , Wail Chairi Mahjor et Toufik Kharkhor**  
 **Projet analysé :** FPLAcademy — application Maven / Spring Boot  
 **Branche de travail :** `workshop2/dependency-security`
 

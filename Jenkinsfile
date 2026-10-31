@@ -14,11 +14,9 @@ pipeline {
                         '''
                     }
         }
-
         stage('Build') {
             steps { sh 'mvn -B clean package -DskipTests' }
         }
-
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
@@ -26,10 +24,22 @@ pipeline {
                 }
             }
         }
+        stage('Dependency-Check') {
+                    steps {
+                        withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                            sh '''
+                            mvn -B org.owasp:dependency-check-maven:check \
+                              -Dformat=ALL \
+                              -DnvdApiKey=$NVD_API_KEY \
+                              -DdataDirectory=/var/jenkins_home/dependency-check-data \
+                              -DfailBuildOnCVSS=11
+                            '''
+                        }
+                    }
+        }
 
     }
-
     post {
-        always { archiveArtifacts artifacts: 'semgrep-report.json', allowEmptyArchive: true }
+        always { archiveArtifacts artifacts: 'semgrep-report.json, target/dependency-check-report.*', allowEmptyArchive: true }
     }
 }

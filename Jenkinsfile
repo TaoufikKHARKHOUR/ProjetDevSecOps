@@ -13,6 +13,7 @@ pipeline {
                         /var/jenkins_home/semgrep-venv/bin/semgrep scan --config p/java --config p/owasp-top-ten --config p/security-audit --metrics=off src/ || true
                         '''
                     }
+        }
 
         stage('Build') {
             steps { sh 'mvn -B clean package -DskipTests' }
@@ -26,8 +27,6 @@ pipeline {
             }
         }
 
-
-        }
     }
 
     post {

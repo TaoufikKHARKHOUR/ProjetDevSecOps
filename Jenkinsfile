@@ -25,17 +25,15 @@ pipeline {
             }
         }
         stage('Dependency-Check') {
-                    steps {
-                        withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-                            sh '''
-                            mvn -B org.owasp:dependency-check-maven:check \
-                              -Dformat=ALL \
-                              -DnvdApiKey=$NVD_API_KEY \
-                              -DdataDirectory=/var/jenkins_home/dependency-check-data \
-                              -DfailBuildOnCVSS=11
-                            '''
-                        }
-                    }
+            steps {
+                sh '''
+                mvn -B org.owasp:dependency-check-maven:check \
+                  -Dformat=ALL \
+                  -DdataDirectory=/var/jenkins_home/dependency-check-data \
+                  -DautoUpdate=false \
+                  -DfailBuildOnCVSS=11
+                '''
+            }
         }
 
     }

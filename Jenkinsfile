@@ -2,6 +2,20 @@ pipeline {
     agent any
     tools { maven 'Maven3' }
 
+        parameters {
+            choice(name: 'DOCKERFILE', choices: ['Dockerfile.vulnerable', 'Dockerfile'],
+                   description: 'Dockerfile a construire et a scanner (avant / apres remediation)')
+            string(name: 'TRIVY_SEVERITY', defaultValue: 'HIGH,CRITICAL',
+                   description: 'Severites qui font echouer le pipeline (Trivy Gate)')
+        }
+
+        environment {
+            TRIVY_BIN       = '/var/jenkins_home/bin/trivy'
+            TRIVY_CACHE_DIR = '/var/jenkins_home/trivy-cache'
+            IMAGE_NAME      = 'workshop-platform'
+            IMAGE_TAG       = "${env.BUILD_NUMBER}"
+        }
+
     stages {
         stage('Checkout') {
             steps { checkout scm }
@@ -35,9 +49,57 @@ pipeline {
                 '''
             }
         }
+        stage('Docker Build') {
+             steps {
+                        sh '''
+                        test -f "$DOCKERFILE" || { echo "Dockerfile introuvable : $DOCKERFILE"; exit 1; }
+                        docker build -f "$DOCKERFILE" -t "$IMAGE_NAME:$IMAGE_TAG" .
+                        '''
+             }
+        }
+
+        stage('Trivy Scan') {
+              steps {
+                    sh '''
+                        "$TRIVY_BIN" --version
+
+                        "$TRIVY_BIN" image \
+                          --scanners vuln,misconfig,secret \
+                          --severity HIGH,CRITICAL \
+                          --timeout 15m \
+                          --format json --output trivy-image.json \
+                          "$IMAGE_NAME:$IMAGE_TAG"
+
+                        "$TRIVY_BIN" convert --format table --output trivy-image.txt trivy-image.json
+                        "$TRIVY_BIN" convert --format template --template "@/var/jenkins_home/trivy-templates/html.tpl" --output trivy-image.html trivy-image.json
+                        cat trivy-image.txt
+
+                        mkdir -p trivy-config
+                        cp "$DOCKERFILE" trivy-config/Dockerfile
+                        "$TRIVY_BIN" config --severity HIGH,CRITICAL --format table --output trivy-dockerfile.txt trivy-config
+                        cat trivy-dockerfile.txt
+                        '''
+              }
+        }
+
+                stage('Trivy Gate') {
+                    steps {
+                        sh '''
+                        "$TRIVY_BIN" image \
+                          --scanners vuln,misconfig,secret \
+                          --severity "$TRIVY_SEVERITY" \
+                          --exit-code 1 \
+                          --quiet \
+                          "$IMAGE_NAME:$IMAGE_TAG"
+                        '''
+                    }
+                }
 
     }
-    post {
-        always { archiveArtifacts artifacts: 'semgrep-report.json, target/dependency-check-report.*', allowEmptyArchive: true }
-    }
+        post {
+            always {
+                archiveArtifacts artifacts: 'semgrep-report.json, target/dependency-check-report.*, trivy-image.*, trivy-dockerfile.txt', allowEmptyArchive: true
+                sh 'docker rmi "$IMAGE_NAME:$IMAGE_TAG" || true'
+            }
+        }
 }

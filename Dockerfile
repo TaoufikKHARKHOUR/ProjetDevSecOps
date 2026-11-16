@@ -1,8 +1,7 @@
 # VOLONTAIREMENT VULNERABLE - support du workshop Trivy, ne jamais deployer.
 # Defauts voulus : image de base ancienne et depreciee, tag flottant, execution en root,
 # pas de HEALTHCHECK, faux secrets ecrits dans l'image.
-FROM openjdk:17-jdk-slim
-
+FROM eclipse-temurin:17.0.5_8-jdk-jammy
 WORKDIR /app
 COPY target/*.war /app/app.war
 

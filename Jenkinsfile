@@ -3,8 +3,6 @@ pipeline {
     tools { maven 'Maven3' }
 
         parameters {
-            choice(name: 'DOCKERFILE', choices: ['Dockerfile'],
-                   description: 'Dockerfile a construire et a scanner (avant / apres remediation)')
             string(name: 'TRIVY_SEVERITY', defaultValue: 'HIGH,CRITICAL',
                    description: 'Severites qui font echouer le pipeline (Trivy Gate)')
         }
@@ -52,10 +50,10 @@ pipeline {
         stage('Docker Build') {
              steps {
                         sh '''
-                        test -f "$DOCKERFILE" || { echo "Dockerfile introuvable : $DOCKERFILE"; exit 1; }
-                        docker build -f "$DOCKERFILE" -t "$IMAGE_NAME:$IMAGE_TAG" .
-                        '''
-             }
+                         test -f Dockerfile || { echo "Dockerfile introuvable"; exit 1; }
+                          docker build -t "$IMAGE_NAME:$IMAGE_TAG" .
+                          '''
+                    }
         }
 
         stage('Trivy Scan') {

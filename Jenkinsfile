@@ -3,7 +3,7 @@ pipeline {
     tools { maven 'Maven3' }
 
         parameters {
-            choice(name: 'DOCKERFILE', choices: ['Dockerfile.vulnerable', 'Dockerfile'],
+            choice(name: 'DOCKERFILE', choices: ['Dockerfile'],
                    description: 'Dockerfile a construire et a scanner (avant / apres remediation)')
             string(name: 'TRIVY_SEVERITY', defaultValue: 'HIGH,CRITICAL',
                    description: 'Severites qui font echouer le pipeline (Trivy Gate)')

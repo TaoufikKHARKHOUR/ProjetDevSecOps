@@ -73,7 +73,7 @@ pipeline {
                         cat trivy-image.txt
 
                         mkdir -p trivy-config
-                        cp "$DOCKERFILE" trivy-config/Dockerfile
+                        cp Dockerfile trivy-config/Dockerfile
                         "$TRIVY_BIN" config --severity HIGH,CRITICAL --format table --output trivy-dockerfile.txt trivy-config
                         cat trivy-dockerfile.txt
                         '''
